@@ -1,58 +1,64 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import cloudflareLogo from './assets/Cloudflare_Logo.svg'
-import './App.css'
+import { useState } from "react";
+import "./App.css";
 
-function App() {
-  const [count, setCount] = useState(0)
-  const [name, setName] = useState('unknown')
+export default function App() {
+  const [current, setCurrent] = useState(null);
+  const [history, setHistory] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [shake, setShake] = useState(false);
+
+  async function getPepTalk() {
+    setLoading(true);
+    setShake(true);
+    setTimeout(() => setShake(false), 400);
+    try {
+      const res = await fetch("/api/peptalk");
+      const data = await res.json();
+      setCurrent(data.message);
+      setHistory((h) => [data.message, ...h].slice(0, 5));
+    } catch (err) {
+      setCurrent("Couldn't reach the pep talk server. But here's one from me: you've got this.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function copyToClipboard() {
+    if (current) navigator.clipboard.writeText(current);
+  }
 
   return (
-    <>
-      <div>
-        <a href='https://vite.dev' target='_blank'>
-          <img src={viteLogo} className='logo' alt='Vite logo' />
-        </a>
-        <a href='https://react.dev' target='_blank'>
-          <img src={reactLogo} className='logo react' alt='React logo' />
-        </a>
-        <a href='https://workers.cloudflare.com/' target='_blank'>
-          <img src={cloudflareLogo} className='logo cloudflare' alt='Cloudflare logo' />
-        </a>
-      </div>
-      <h1>Vite + React + Cloudflare</h1>
-      <div className='card'>
-        <button
-          onClick={() => setCount((count) => count + 1)}
-          aria-label='increment'
-        >
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <div className='card'>
-        <button
-          onClick={() => {
-            fetch('/api/')
-              .then((res) => res.json())
-              .then((data) => setName(data.name))
-          }}
-          aria-label='get name'
-        >
-          Name from API is: {name}
-        </button>
-        <p>
-          Edit <code>worker/index.js</code> to change the name
-        </p>
-      </div>
-      <p className='read-the-docs'>
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="app">
+      <h1>Pep Talk ✨</h1>
+      <p className="tagline">Feeling meh? Click the button.</p>
 
-export default App
+      <button
+        className={`big-button ${shake ? "shake" : ""}`}
+        onClick={getPepTalk}
+        disabled={loading}
+      >
+        {loading ? "Thinking..." : current ? "Another one" : "Give me a pep talk"}
+      </button>
+
+      {current && (
+        <div className="pep-card">
+          <p>"{current}"</p>
+          <button className="copy-btn" onClick={copyToClipboard}>
+            Copy
+          </button>
+        </div>
+      )}
+
+      {history.length > 1 && (
+        <div className="history">
+          <h2>Recent</h2>
+          <ul>
+            {history.slice(1).map((h, i) => (
+              <li key={i}>{h}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+}
