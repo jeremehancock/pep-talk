@@ -4,7 +4,7 @@
  */
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "pep-talk-2",
+	"name": "pep-talk",
 	"main": "worker/index.js",
 	"compatibility_date": "2026-04-10",
 	"assets": {
